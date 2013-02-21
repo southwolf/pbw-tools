@@ -6,22 +6,23 @@ import sys, logging, os.path, os, struct, json
 
 class BMPResource:
     def __init__(self, data):
-        (self.depth,self.unknown_1,self.unknown_2,self.width,self.height) = struct.unpack("<hhlhh", data[:12])
+        (self.scanlines,self.unknown_1,self.unknown_2,self.width,self.height) = struct.unpack("<hhlhh", data[:12])
         assert(self.unknown_1 == 4096)
         assert(self.unknown_2 == 0)
         self.data = data[12:]
     
     def __repr__(self):
-        return "<BMP %dx%d %d-bit size %d>" % (self.width,self.height,self.depth,len(self.data))
+        return "<BMP %dx%d (%d scanlines) size %d>" % (self.width,self.height,self.scanlines,len(self.data))
 
 class Resource:
     def __init__(self, raw, file):
         (self.index, self.offset, self.size, self.crc) = struct.unpack("<LLLL", raw)
         #Resources are loaded sequentially, so...
-        self.png = BMPResource(file.read(self.size))
+        self.raw_data = file.read(self.size)
+        self.png = BMPResource(self.raw_data)
     
     def __str__(self):
-        return self.png.data
+        return self.raw_data
     
     def __repr__(self):
         return "<Resource %d @ %08x:%08x CRC:%08x %s>" % (self.index, self.offset, self.offset+self.size, self.crc, repr(self.png))

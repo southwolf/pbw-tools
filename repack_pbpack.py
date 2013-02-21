@@ -9,9 +9,9 @@ if __name__=="__main__":
     logging.basicConfig(format='%(message)s')
     log.setLevel(logging.DEBUG)
 
-    log.info('Processing "%s"' % "app_resources.pbpack")
-    p = PBPack(open("app_resources.pbpack.backup"))
-    log.info(p)
+    #log.info('Processing "%s"' % "app_resources.pbpack")
+    #p = PBPack(open("app_resources.pbpack.backup"))
+    #log.info(p)
     
     manifest = None
     with open("manifest.json", "r") as mf:
@@ -21,7 +21,7 @@ if __name__=="__main__":
         sys.exit(1)
     
     with open("app_resources.pbpack", "wb") as pbf:
-        pbf.write(p.pack())
+        pbf.write("\0"*28)
         index = 1
         offset = 0
         raws = []
@@ -35,6 +35,9 @@ if __name__=="__main__":
             print "<Resource %2d @ %04x:%04x CRC:%08x>" % (index, offset, offset+size, crc)
             index += 1
             offset += size
-        pbf.write("\0" * (4096+12+16-pbf.tell()))
+        pbf.write("\0" * (4096+28-pbf.tell()))
         for raw in raws:
             pbf.write(raw)
+        
+        pbf.seek(0)
+        pbf.write(struct.pack("<LLL16s", index-1, crc32(''.join(raws)), manifest['resources']['timestamp'], str(manifest['resources']['friendlyVersion'])))

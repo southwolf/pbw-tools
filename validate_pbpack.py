@@ -56,7 +56,10 @@ class PBPack:
         return "<PBPack %08X \"%s\" [%d]>" % (self.unknown_1, self.name, self.resource_count)
 
 if __name__=="__main__":
+    fn = "app_resources.pbpack"
+    if len(sys.argv) > 1:
+        fn = sys.argv[1]
     
     log.info('Processing "%s"' % "app_resources.pbpack")
-    p = PBPack(open("app_resources.pbpack", 'rb'))
+    p = PBPack(open(fn, 'rb'))
     log.info(p)

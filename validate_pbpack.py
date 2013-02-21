@@ -3,7 +3,11 @@
 from zipfile import ZipFile
 from glob import glob
 import sys, logging, os.path, os, struct, json
-import stm32_crc, zlib
+from libpebble.stm32_crc import crc32
+
+log = logging.getLogger()
+logging.basicConfig(format='%(message)s')
+log.setLevel(logging.DEBUG)
 
 class BMPResource:
     def __init__(self, data):
@@ -11,9 +15,11 @@ class BMPResource:
         assert(self.unknown_1 == 4096)
         assert(self.unknown_2 == 0)
         self.data = data[12:]
+        
+        #log.debug(repr(self))
     
     def __repr__(self):
-        return "<BMP %dx%d %d-bit size %d>" % (self.width,self.height,self.depth,len(self.data))
+        return "<BMP %dx%d %2dB/scanline size %d>" % (self.width,self.height,self.depth,len(self.data))
 
 class Resource:
     def __init__(self, raw, file):
@@ -21,13 +27,17 @@ class Resource:
         #Resources are loaded sequentially, so...
         self.raw_data = file.read(self.size)
         self.png = BMPResource(self.raw_data)
-        print "%08x | %08x" % (self.crc, stm32_crc.crc32(self.raw_data))
+        log.debug("%08X | %08X" % (self.crc, crc32(self.raw_data)))
+        log.debug(repr(self))
+        assert(self.crc == crc32(self.raw_data))
+        
+        
     
     def __str__(self):
         return self.png.data
     
     def __repr__(self):
-        return "<Resource %d @ %08x:%08x CRC:%08x %s>" % (self.index, self.offset, self.offset+self.size, self.crc, repr(self.png))
+        return "<Resource %2d @ %04x:%04x CRC:%08x %s>" % (self.index, self.offset, self.offset+self.size, self.crc, repr(self.png))
 
 class PBPack:
     def __init__(self, pack):
@@ -39,13 +49,13 @@ class PBPack:
             offset = 16*i
             self.resources.append(Resource(resource_block[offset:offset+16], pack))
     
+    def pack(self):
+        return struct.pack("<LLL16s", self.resource_count, self.unknown_1, self.timestamp, self.name)
+    
     def __repr__(self):
         return "<PBPack %08X \"%s\" [%d]>" % (self.unknown_1, self.name, self.resource_count)
 
 if __name__=="__main__":
-    log = logging.getLogger()
-    logging.basicConfig(format='%(message)s')
-    log.setLevel(logging.DEBUG)
     
     log.info('Processing "%s"' % "app_resources.pbpack")
     p = PBPack(open("app_resources.pbpack", 'rb'))

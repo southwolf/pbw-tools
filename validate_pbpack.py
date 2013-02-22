@@ -41,7 +41,7 @@ class Resource:
 
 class PBPack:
     def __init__(self, pack):
-        (self.resource_count, self.unknown_1, self.timestamp, self.name) = struct.unpack("<LLL16s", pack.read(12+16))
+        (self.resource_count, self.crc, self.timestamp, self.name) = struct.unpack("<LLL16s", pack.read(12+16))
         resource_block = pack.read(4096)
         offset = 0
         self.resources = []
@@ -50,10 +50,10 @@ class PBPack:
             self.resources.append(Resource(resource_block[offset:offset+16], pack))
     
     def pack(self):
-        return struct.pack("<LLL16s", self.resource_count, self.unknown_1, self.timestamp, self.name)
+        return struct.pack("<LLL16s", self.resource_count, self.crc, self.timestamp, self.name)
     
     def __repr__(self):
-        return "<PBPack %08X \"%s\" [%d]>" % (self.unknown_1, self.name, self.resource_count)
+        return "<PBPack %08X \"%s\" [%d]>" % (self.crc, self.name, self.resource_count)
 
 if __name__=="__main__":
     fn = "app_resources.pbpack"

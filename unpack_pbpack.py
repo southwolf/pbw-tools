@@ -8,7 +8,7 @@ class BMPResource:
     def __init__(self, data):
         (self.scanlines,self.unknown_1,self.unknown_2,self.width,self.height) = struct.unpack("<hhlhh", data[:12])
         assert(self.unknown_1 == 4096)
-        assert(self.unknown_2 == 0)
+        #assert(self.unknown_2 == 0)
         self.data = data[12:]
     
     def __repr__(self):
@@ -36,6 +36,13 @@ class PBPack:
         for i in xrange(self.resource_count):
             offset = 16*i
             self.resources.append(Resource(resource_block[offset:offset+16], pack))
+        before = pack.tell()
+        remainder = pack.read()
+        after = pack.tell()
+        if before != after:
+            log.error("Resource table stopped at offset %08X but %d bytes remain - writing to remainder.resource" % before, after)
+            with open("remainder.resource", 'wb') as f:
+                f.write(remainder)
     
     def __repr__(self):
         return "<PBPack %08X \"%s\" [%d]>" % (self.unknown_1, self.name, self.resource_count)
@@ -54,6 +61,13 @@ if __name__=="__main__":
         count = 0
         for resource in manifest['debug']['resourceMap']['media']:
             fn = "%s.%s" % (resource['defName'],resource['type'])
+            log.info("Generating %s" % fn)
+            with open(fn, 'wb') as f:
+                f.write(str(p.resources[count]))
+                log.info(repr(p.resources[count]))
+                count += 1
+        while count < p.resource_count:
+            fn = "UNKNOWN-%d.resource" % count
             log.info("Generating %s" % fn)
             with open(fn, 'wb') as f:
                 f.write(str(p.resources[count]))

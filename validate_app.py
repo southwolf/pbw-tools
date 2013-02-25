@@ -1,9 +1,56 @@
 import sys, struct
 from libpebble.stm32_crc import crc32
 
+class PebbleApp:
+    @staticmethod
+    def validate_magic(value, raw):
+        assert value==PebbleApp.PEBBLE_MAGIC, "Invalid Pebble Magic - expected %s got %s" % (repr(PebbleApp.PEBBLE_MAGIC), repr(value))
+    
+    @staticmethod
+    def validate_size(value, raw):
+        assert value==PebbleApp.PEBBLE_MAGIC, "Invalid Pebble Magic - expected %s got %s" % (repr(PebbleApp.PEBBLE_MAGIC), repr(value))
+
+    @staticmethod
+    def validate_offset(value, raw):
+        assert value==PebbleApp.PEBBLE_MAGIC, "Invalid Pebble Magic - expected %s got %s" % (repr(PebbleApp.PEBBLE_MAGIC), repr(value))
+
+    @staticmethod
+    def validate_crc(value, raw):
+        assert value==PebbleApp.PEBBLE_MAGIC, "Invalid Pebble Magic - expected %s got %s" % (repr(PebbleApp.PEBBLE_MAGIC), repr(value))
+
+    
+    PEBBLE_HEADER_FORMAT = [
+    ("magic", "8s", validate_magic),
+    ("version", "H"),
+    ("sdk_version", "H"),
+    ("app_version", "H"),
+    ("size", "I", validate_size),
+    ("entry_point", "I", validate_offset),
+    ("crc", "I", validate_crc),
+    ("name", "32s"),
+    ("company", "32s"),
+    ("unknown3", "I"),
+    ("jump_table", "I", validate_offset),
+    ("flags", "I", validate_offset),
+    ("reloc_list", "I", validate_offset),
+    ("num_relocs", "I"),
+    ]
+    
+    PEBBLE_JOINED_HEADER = "<"+"".join([x[1] for x in PEBBLE_HEADER_FORMAT])
+    PEBBLE_MAGIC="PBLAPP\x00\x00"
+    
+    def __init__(self, raw):
+        self.header = {}
+        offset = 0
+        offset = struct.calcsize(PebbleApp.PEBBLE_JOINED_HEADER)
+        print struct.unpack_from(PebbleApp.PEBBLE_JOINED_HEADER, raw)
+        print offset
+
 if __name__ == "__main__":
     
     raw = open('pebble-app.bin', 'rb').read()
+    
+    pa = PebbleApp(raw)
     
     with open('pebble-app.bin', 'rb') as f:
         header = f.read(8+8+8+32+32+20)

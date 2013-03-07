@@ -48,17 +48,11 @@ class PebbleApp:
         print offset
 
 if __name__ == "__main__":
-<<<<<<< HEAD
-    
     raw = open('pebble-app.bin', 'rb').read()
     
     pa = PebbleApp(raw)
     
     with open('pebble-app.bin', 'rb') as f:
-=======
-    r2 = open(sys.argv[1], 'rb').read()
-    with open(sys.argv[1], 'rb') as f:
->>>>>>> refs/remotes/origin/master
         header = f.read(8+8+8+32+32+20)
         (magic, version, sdk_version, app_version, size, entry_point, app_crc, old_name, old_company, unknown3, jump_table, flags, reloc_list, num_relocs) = struct.unpack("<8sHHHHII32s32sIIIII", header)
         print (magic, version, sdk_version, app_version, size, hex(entry_point), hex(app_crc), old_name, old_company, unknown3, hex(jump_table), flags, hex(reloc_list), num_relocs)

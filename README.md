@@ -8,6 +8,8 @@ Current Status
 
 Very, very hacky pre-alpha. Quite a bit of copy/paste since I wanted to get something up and running ASAP.
 
+Given that the watchface SDK is now promised for mid-April 2013 I'm focusing on other projects for now.
+
 Overview
 --------
 
